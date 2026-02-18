@@ -143,9 +143,6 @@ filtered_df["Over6"] = filtered_df["FirstPumpArriving_AttendanceTime"] > 360
 # ------------------------------------------------------------
 # KPIs
 
-
-st.markdown("### Operational Overview")
-
 overall_turnout = filtered_df["TurnoutMinutes"].median()
 overall_travel = filtered_df["TravelMinutes"].median()
 
