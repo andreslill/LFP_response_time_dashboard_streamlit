@@ -36,9 +36,8 @@ def style_axes(ax):
 st.title("Operational Drivers")
 
 st.markdown("""
-This page analyses the operational drivers of First Pump Attendance Time by decomposing response into turnout and travel components,
-and by examining recorded causes of 6-minute target exceedance.
-**Attendance Time = Turnout Time + Travel Time**
+This page analyses the operational drivers of Response Time by decomposing it into turnout and travel components 
+(Attendance Time = Turnout Time + Travel Time), and by examining the recorded causes of 6-minute target exceedance.
 
 The goal is to identify:
 - whether delays are primarily driven by  
