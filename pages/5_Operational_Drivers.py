@@ -235,8 +235,8 @@ ax.set_ylabel("")
 ax.invert_yaxis()
 
 # --------------------------------------------
-# 5️⃣ Legend like lineplot (top horizontal)
-# --------------------------------------------
+# Legend 
+
 
 ax.legend(
     loc="upper center",
@@ -445,6 +445,10 @@ delay_counts = (
     .size()
     .reset_index(name="IncidentCount")
     .sort_values("IncidentCount", ascending=False)
+)
+
+delay_counts["DelayCode_Description"] = delay_counts["DelayCode_Description"].replace(
+    {"No delay": "No recorded delay code"}
 )
 
 total_exceedances = delay_counts["IncidentCount"].sum()
