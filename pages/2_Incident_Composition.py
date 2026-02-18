@@ -186,6 +186,32 @@ fig.tight_layout()
 
 st.pyplot(fig)
 
+
+# Dynamic Markdown
+
+# Calculate shares
+incident_share = (
+    df["IncidentGroup"]
+    .value_counts(normalize=True)
+    .mul(100)
+    .round(1)
+)
+
+false_alarm_share = incident_share.get("False Alarm", 0)
+special_service_share = incident_share.get("Special Service", 0)
+fire_share = incident_share.get("Fire", 0)
+
+st.markdown(f"""
+    **Key Insights**
+
+- Nearly **{100 - fire_share}%** of deployments are non-fire related.
+- False Alarms dominate the workload and shape overall demand patterns.
+- The imbalance between fire and non-fire incidents highlights
+  the importance of understanding workload composition when evaluating
+  response performance.
+""")
+
+
 # ---------------------------------------------------------------------
 st.markdown("---")
 # ---------------------------------------------------------------------
@@ -285,6 +311,88 @@ fig.tight_layout()
 
 st.pyplot(fig, use_container_width=True)
 
+# Dynamic Markdown
+
+# month order
+month_order = [
+    "January","February","March","April","May","June",
+    "July","August","September","October","November","December"
+]
+
+#  Monthly totals (All Incidents) 
+monthly_totals = (
+    filtered_df
+    .groupby("MonthName")["IncidentNumber"]
+    .nunique()
+    .reindex(month_order)
+    .dropna()
+)
+
+peak_month = monthly_totals.idxmax()
+low_month = monthly_totals.idxmin()
+
+peak_value = int(monthly_totals.max())
+low_value = int(monthly_totals.min())
+
+if low_value > 0:
+    seasonal_range_pct = round(((peak_value - low_value) / low_value) * 100, 1)
+else:
+    seasonal_range_pct = 0
+
+# Fire 
+monthly_fire = (
+    filtered_df[filtered_df["IncidentGroup"] == "Fire"]
+    .groupby("MonthName")["IncidentNumber"]
+    .nunique()
+    .reindex(month_order)
+    .dropna()
+)
+
+fire_peak_month = monthly_fire.idxmax()
+fire_peak_value = int(monthly_fire.max())
+
+
+# False Alarm 
+monthly_false = (
+    filtered_df[filtered_df["IncidentGroup"] == "False Alarm"]
+    .groupby("MonthName")["IncidentNumber"]
+    .nunique()
+    .reindex(month_order)
+    .dropna()
+)
+
+false_peak_month = monthly_false.idxmax()
+false_peak_value = int(monthly_false.max())
+
+
+# Special Service 
+monthly_special = (
+    filtered_df[filtered_df["IncidentGroup"] == "Special Service"]
+    .groupby("MonthName")["IncidentNumber"]
+    .nunique()
+    .reindex(month_order)
+    .dropna()
+)
+
+special_peak_month = monthly_special.idxmax()
+special_peak_value = int(monthly_special.max())
+
+
+st.markdown(f"""
+ **Seasonal Insights**
+
+- Overall incident demand peaks in **{peak_month} ({peak_value:,})** and reaches its lowest level in **{low_month} ({low_value:,})**,
+  representing a seasonal variation of approximately **{seasonal_range_pct}%**.
+- Fire-related incidents show a pronounced concentration in summer, peaking in **{fire_peak_month} ({fire_peak_value:,})**,
+  suggesting potential seasonal drivers.
+- False alarms follow a similar demand curve, with the highest number of incidents observed in **{false_peak_month} ({false_peak_value:,})**.
+- Special Services also display slight seasonal variation, with a peak in **{special_peak_month} ({special_peak_value:,})**.
+- Despite visible monthly fluctuations, the overall demand pattern remains structurally stable across incident types.
+""")
+
+
+
+
 # ---------------------------------------------------------------------
 st.markdown("---")
 # ---------------------------------------------------------------------
@@ -374,8 +482,6 @@ cbar.set_label("Number of Incidents", fontsize=13)
 fig.tight_layout()
 
 st.pyplot(fig)
-
-
 
 
 
