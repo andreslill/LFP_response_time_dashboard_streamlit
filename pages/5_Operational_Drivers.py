@@ -428,11 +428,11 @@ st.markdown(f"""
 # ------------------------------------------------------------
 
 
-st.header("Drivers of 6-Minute Response Target Exceedance")
+st.header("3. Drivers of 6-Minute Response Target Exceedance")
 
 # ---------------------------------------------------------------------
 
-st.subheader("3. Drivers of 6-Minute Response Time Target Exceedance")
+st.subheader("Breakdown of Recorded Delay Reasons")
 
 # Filter incidents exceeding 6-minute target
 delayed_df = filtered_df[
