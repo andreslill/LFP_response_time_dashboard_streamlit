@@ -2,7 +2,7 @@
 
 ## 📊 Project Overview
 
-This project analyses operational performance data from the London Fire
+This project analyses response performance data from the London Fire
 Brigade (LFB) between 2021 and 2025.
 
 The goal is to explore response performance patterns, identify
