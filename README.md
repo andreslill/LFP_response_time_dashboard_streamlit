@@ -8,7 +8,7 @@ Brigade (LFB) between 2021 and 2025.
 The project is implemented as a multi-page Streamlit application.
 
 ⚠️ Note: The dashboard is currently still under development. Additional
-refinements, visual improvements, and analyses are planned.
+refinements, visual improvements and analyses are planned.
 
 ------------------------------------------------------------------------
 
