@@ -480,10 +480,11 @@ final_delay = pd.concat([top_delay, others_row], ignore_index=True)
 final_delay = final_delay.sort_values("Percent", ascending=True)
 
 # Context
+exceedances = f"{len(delayed_df):,}".replace(",", ".")
 
 st.caption(
-    f"{len(delayed_df):,} incidents exceeded the 6-minute target "
-    f"({len(delayed_df)/len(filtered_df)*100:.1f}% of total incidents)."
+    f"{exceedances} incidents exceeded the 6-minute target "
+    f"({len(delayed_df)/len(filtered_df)*100:.1f}% of total incidents) in {period_label}."
 )
 
 # Plot
