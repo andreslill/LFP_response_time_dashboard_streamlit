@@ -37,7 +37,7 @@ st.title("Operational Drivers")
 
 st.markdown("""
 This page analyses the drivers of Response Time by decomposing it into turnout and travel time 
-(Attendance Time = Turnout Time + Travel Time), and by examining the recorded causes of 6-minute target exceedance.
+(Attendance Time = Turnout Time + Travel Time),    and by examining the recorded causes of 6-minute target exceedance.
 
 The goal is to identify:
 - whether delays are primarily driven by  
