@@ -38,12 +38,10 @@ st.title("Operational Drivers")
 st.markdown("""
 This page analyses the drivers of Response Time by decomposing it into turnout and travel time 
 (Attendance Time = Turnout Time + Travel Time), and by examining the recorded causes of 6-minute target exceedance.
-
-The goal is to identify:
-- whether delays are primarily driven by  
-**station mobilisation (turnout)** or **traffic conditions / distance (travel time)** and
-- which recorded operational factors are associated with 6-minute target exceedance..
+The objective is to distinguish operational factors (station mobilisation) from external constraints (traffic conditions and travel distance), 
+and to assess their relative contribution to target exceedance.
 """)
+
 
 # ---------------------------------------------------------------------
 # Load Data
