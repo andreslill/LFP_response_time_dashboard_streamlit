@@ -5,10 +5,6 @@
 This project analyses response performance data from the London Fire
 Brigade (LFB) between 2021 and 2025.
 
-The goal is to explore response performance patterns, identify
-structural differences across boroughs, and evaluate compliance with the
-6-minute response target.
-
 The project is implemented as a multi-page Streamlit application.
 
 ⚠️ Note: The dashboard is currently still under development. Additional
