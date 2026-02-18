@@ -3,7 +3,7 @@ from data_loader import load_data
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
-
+import numpy as np
 
 # ---------------------------------------------------------------------
 # theme
@@ -195,6 +195,7 @@ band_pivot = band_counts.pivot(
     values="Percent"
 ).fillna(0)
 
+band_pivot = band_pivot.reindex(columns=labels, fill_value=0)
 
 # Plot
 fig, ax = plt.subplots(figsize=(FIG_WIDTH, FIG_HEIGHT_SMALL))
@@ -204,17 +205,35 @@ palette = ["#2ca02c", "#f1c40f", "#e67e22", "#c0392b"]
 left = None
 
 for i, band in enumerate(labels):
-    ax.barh(
+
+    values = band_pivot[band]
+
+    bars = ax.barh(
         band_pivot.index,
-        band_pivot[band],
+        values,
         left=left,
         color=palette[i],
         label=band
     )
+
+    # 👇 Nur für ≤ 6 min Label anzeigen
+    if band == "≤ 6 min":
+        for bar, value in zip(bars, values):
+            ax.text(
+                bar.get_x() + bar.get_width() / 2,
+                bar.get_y() + bar.get_height() / 2,
+                f"{value:.1f}%",
+                ha="center",
+                va="center",
+                color="white",
+                fontsize=10,
+                weight="bold"
+            )
+
     if left is None:
-        left = band_pivot[band]
+        left = values.copy()
     else:
-        left += band_pivot[band]
+        left += values
         
 
 ax.set_xlim(0, 100)
@@ -233,12 +252,42 @@ extreme_delay_rate = (
     filtered_df["ResponseMinutes"] > 10
 ).mean() * 100
 
-st.markdown("""
-- False Alarm incidents show the highest compliance with the 6-minute target.
-- Special Service incidents show the largest proportion of responses exceeding 6 minutes.
-- Fire incidents follow a similar distribution pattern, with the majority handled within target but a noticeable share falling outside the 6-min target.
-- Delays exceeding 10 minutes response time remain limited across all incident types, representing a small yet operationally relevant risk segment.
+# Calculate exceedance
+band_pivot["Exceedance"] = (
+    band_pivot["6–8 min"] +
+    band_pivot["8–10 min"] +
+    band_pivot["> 10 min"]
+)
+
+# Define available types
+within_6 = band_pivot["≤ 6 min"]
+exceed_6 = (
+    band_pivot["6–8 min"] +
+    band_pivot["8–10 min"] +
+    band_pivot["> 10 min"]
+)
+extreme_10 = band_pivot["> 10 min"]
+
+best_type = within_6.idxmax()
+worst_type = within_6.idxmin()
+
+highest_exceed = exceed_6.idxmax()
+highest_extreme = extreme_10.idxmax()
+
+st.markdown(f"""
+- **{best_type}** records the highest 6-minute compliance ({within_6[best_type]:.1f}%), .
+- Responses exceeding 6 minutes are most frequent in **{highest_exceed}** ({exceed_6[highest_exceed]:.1f}%).
+- Delays above 10 minutes remain limited overall, peaking in **{highest_extreme}** ({extreme_10[highest_extreme]:.1f}%).
 """)
+
+
+
+
+
+
+
+
+
 
 # ---------------------------------------------------------------------
 st.markdown("---")
@@ -260,7 +309,7 @@ col4.markdown("<span style='color:#ff7f0e;'>●</span> Fire", unsafe_allow_html=
 
 median_firstpump_attendance_by_type = (
     filtered_df
-    .groupby(["Month", "IncidentGroup"])["FirstPumpArriving_AttendanceTime"]
+    .groupby(["Month", "MonthName", "IncidentGroup"])["FirstPumpArriving_AttendanceTime"]
     .median()
     .div(60)
     .reset_index(name="MedianFirstPumpMinutes")
@@ -268,7 +317,7 @@ median_firstpump_attendance_by_type = (
 
 median_firstpump_attendance_total = (
     filtered_df
-    .groupby("Month")["FirstPumpArriving_AttendanceTime"]
+    .groupby(["Month", "MonthName"])["FirstPumpArriving_AttendanceTime"]
     .median()
     .div(60)
     .reset_index(name="MedianFirstPumpMinutes")
@@ -338,13 +387,70 @@ fig.tight_layout()
 
 st.pyplot(fig)
 
-st.markdown("""
-- Median response times remain stable throughout the analysed period.
-- Special Service incidents show moderate seasonal variation, with increases in early summer and again in late autumn.
-- Fire incidents showing a pronounced peak in summer.
-- False Alarms display a similar increase towards summer and an additional increase in late autumn.
-- Fire and Special Service incidents** consistently show slightly longer attendance times than False Alarms.
-""")
+# ---------------------------------------------------------
+# Dynamic Seasonal Markdown
+
+seasonal_df = median_firstpump_attendance_long.copy()
+
+# All Incidents only
+
+# Fire
+fire_df = seasonal_df[
+    seasonal_df["IncidentGroup"] == "Fire"
+]
+
+fire_peak_idx = fire_df["MedianFirstPumpMinutes"].idxmax()
+fire_peak_month = fire_df.loc[fire_peak_idx, "MonthName"]
+fire_peak_value = fire_df.loc[fire_peak_idx, "MedianFirstPumpMinutes"]
+
+# Special Service
+special_df = seasonal_df[
+    seasonal_df["IncidentGroup"] == "Special Service"
+]
+
+special_peak_idx = special_df["MedianFirstPumpMinutes"].idxmax()
+special_peak_month = special_df.loc[special_peak_idx, "MonthName"]
+special_peak_value = special_df.loc[special_peak_idx, "MedianFirstPumpMinutes"]
+
+# False Alarm
+false_df = seasonal_df[
+    seasonal_df["IncidentGroup"] == "False Alarm"
+]
+
+false_peak_idx = false_df["MedianFirstPumpMinutes"].idxmax()
+false_peak_month = false_df.loc[false_peak_idx, "MonthName"]
+false_peak_value = false_df.loc[false_peak_idx, "MedianFirstPumpMinutes"]
+
+# Calculate peak gap (Special Service vs False Alarm)
+peak_gap = special_peak_value - false_peak_value
+peak_gap_seconds = peak_gap * 60
+
+# Performance gap as % of Special Service peak median response time
+peak_gap_percent = (
+    (special_peak_value - false_peak_value) 
+    / special_peak_value
+) * 100
+
+# ---------------------------------------------------------
+# Markdown Output 
+
+st.markdown(f"""
+- **Fire incidents** show their highest median in **{fire_peak_month}** ({fire_peak_value:.2f} min), while
+  **Special Service** peaks in **{special_peak_month}** ({special_peak_value:.2f} min) and
+  **False Alarms** in **{false_peak_month}** ({false_peak_value:.2f} min).
+- Across all months, **Special Service** consistently records the longest median response times, followed by **Fire**,
+  while **False Alarms** remain the fastest category.
+- The performance gap between Special Service and False Alarm at peak months reaches approximately
+  ~{peak_gap_seconds:.0f} seconds ({peak_gap_percent:.1f}%** of the Special Service median response time), indicating structurally longer response times
+  for more complex incidents.
+- Despite moderate seasonal variation, the relative ranking between incident types remains stable throughout the year(s).""")
+
+
+
+
+
+
+
 
 # ---------------------------------------------------------------------
 st.markdown("---")
@@ -432,8 +538,9 @@ st.markdown("---")
 st.markdown("""
 ### Key Takeaways
 
-- Overall response time remains stable across the analysed period.
-- False Alarm incidents show the fastest response times.
+- Response performance is stable across months and hours, with minimal variation in response performance.
+- False Alarm incidents show the fastest response times, reflecting lower operational complexity.
+- The 6-minute response target is met in {compliance_rate:.1f}% of incidents, demonstrating consistent response performance.
 - Delays exeeding 10 minutes remain rare, accounting for approximately 3% of incidents.
 """)
 
