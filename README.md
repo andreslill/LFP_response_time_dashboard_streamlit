@@ -12,7 +12,7 @@ structural differences across boroughs, and evaluate compliance with the
 The project is implemented as a multi-page Streamlit application.
 
 ⚠️ Note: The dashboard is currently still under development. Additional
-refinements, visual improvements, and extended analyses are planned.
+refinements, visual improvements, and analyses are planned.
 
 ------------------------------------------------------------------------
 
