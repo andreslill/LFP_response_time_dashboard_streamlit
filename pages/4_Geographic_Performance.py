@@ -305,17 +305,11 @@ if metric_choice == "Median Response Time":
     st.markdown(f"""
     **Map Insight**
 
-    - Median response times vary across boroughs.  
-    - Longer response times are primarily clustered in larger outer boroughs,
-    - while central areas generally demonstrate attendance.
     """)
 else:
     st.markdown(f"""
     **Map Insight**
 
-    6-minute compliance varies across boroughs.  
-    Higher compliance rates cluster in central boroughs, 
-    whereas several outer boroughs show lower target achievement.
     """)
 
 st.markdown("")
