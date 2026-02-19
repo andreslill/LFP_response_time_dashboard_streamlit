@@ -37,7 +37,9 @@ st.markdown("London Fire Brigade Response Performance (2021–2025)")
 df = load_data()
 
 # ---------------------------------------------------------------------
-# Year and Month Filters
+# Filters
+
+# Year and Month Filters 
 
 st.sidebar.header("Filters")
 
@@ -56,7 +58,19 @@ selected_year = st.sidebar.selectbox("Select Year",options=available_years)
 # Month filter
 selected_month = st.sidebar.selectbox("Select Month",options=available_months)
 
+# Incident type Filter
+incident_options = ["All"] + sorted(df["IncidentGroup"].dropna().unique())
+
+selected_incident = st.sidebar.selectbox(
+    "Select Incident Type",
+    options=incident_options,
+    key="geo_incident"
+)
+
+# ---------------------------------------------------------------------
 # Apply Filters
+
+# Year + Month
 if selected_year == "All" and selected_month == "All":
     filtered_df = df.copy()
 
@@ -72,6 +86,13 @@ else:
         (df["MonthName"] == selected_month)
     ]
 
+# Incident Type
+if selected_incident != "All":
+    filtered_df = filtered_df[
+        filtered_df["IncidentGroup"] == selected_incident
+    ]
+
+# Empty check
 if filtered_df.empty:
     st.warning("No data available for selected filters.")
     st.stop()
@@ -87,18 +108,17 @@ else:
     month_text = selected_month
 
 # Dynamic Period Label
-
 min_year = df["Year"].min()
 max_year = df["Year"].max()
 
 if selected_year == "All" and selected_month == "All":
-    period_label = f"{min_year}–{max_year}"
+   period_label = f"{min_year}–{max_year}"
 
 elif selected_year != "All" and selected_month == "All":
-    period_label = f"{selected_year}, January–December"
+     period_label = f"{selected_year}, January–December"
 
 elif selected_year == "All" and selected_month != "All":
-    period_label = f"{selected_month} months between {min_year} and {max_year}"
+     period_label = f"{selected_month} months between {min_year} and {max_year}"
 
 else:
     period_label = f"{selected_month} {selected_year}"
@@ -174,7 +194,7 @@ st.pyplot(fig)
 
 st.markdown("**Key Insights:**")
 
-st.markdown("""
+st.markdown(f"""
 - Across {period_label} ({incident_label.lower()}), response performance remains stable,
   with the 6-minute target achieved in approximately three out of four incidents.
 - Extreme delays exceeding 10 min affect only a small share of incidents,
