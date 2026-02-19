@@ -266,9 +266,18 @@ metric_choice = st.radio(
     key="geo_metric_toggle"
 )
 
-# Select Metric
-m = folium.Map(location=[51.5074, -0.1278], zoom_start=10)
+# # Non-interactive (fixed London view) dashboard map 
+m = folium.Map(
+    location=[51.5074, -0.1278],
+    zoom_start=10,
+    min_zoom=10,
+    max_zoom=10,
+    zoom_control=False,
+    scrollWheelZoom=False,
+    dragging=False
+)
 
+# Select Metric
 if metric_choice == "Median Response Time":
     value_column = "MedianResponseMinutes"
     legend_name = "Median Response Time (minutes)"
@@ -360,7 +369,7 @@ if metric_choice == "Incident Volume":
     **Map Insight**
 
     - **Westminster** records the highest incident volume.
-    - This reinforcing the concentration of operational demand in central London.
+    - Incident demand is concentrated in major central boroughs.
     - Outer boroughs show comparatively lower incident numbers
     """)
 
@@ -384,8 +393,62 @@ elif metric_choice == "Compliance Rate":
 
 st.markdown("")
 
+
+# ---------------------------------------------------------------------
+# Expandable Compliance Rate Ranking
+
+with st.expander("Incident Volume by Borough Ranking"):
+
+    st.subheader("Borough Ranking: Incident Volume")
+
+    incident_volume_by_borough = (
+        filtered_df
+        .groupby("IncGeo_BoroughName")
+        .size()
+        .reset_index(name="IncidentCount")
+        .sort_values("IncidentCount", ascending=False)  
+    )
+
+    fig, ax = plt.subplots(figsize=(10, 12))
+
+    sns.barplot(
+        data=incident_volume_by_borough,
+        y="IncGeo_BoroughName",
+        x="IncidentCount",
+        order=incident_volume_by_borough["IncGeo_BoroughName"],
+        palette="Blues_r",   
+        ax=ax
+    )
+
+    ax.set_xlabel("Number of Incidents")
+    ax.set_ylabel("")
+
+    sns.despine()
+
+    st.pyplot(fig)
+
+
+    # Dynamic Ranking Insight
+
+    highest_borough = incident_volume_by_borough.iloc[0]
+    lowest_borough = incident_volume_by_borough.iloc[-1]
+
+    spread = (
+        highest_borough["IncidentCount"]
+        - lowest_borough["IncidentCount"]
+    )
+
+    st.markdown(f"""
+    **Ranking Insight**
+
+    - Highest incident volume: **{highest_borough['IncGeo_BoroughName']}** ({highest_borough['IncidentCount']:,})
+    - Lowest incident volume: **{lowest_borough['IncGeo_BoroughName']}** ({lowest_borough['IncidentCount']:,})
+    - Volume spread: **{spread:,} incidents**
+    """)
+
 # ---------------------------------------------------
 # Expandable Response Time Ranking
+
 with st.expander("Show Response Time by Borough Ranking"):
 
     st.subheader("Borough Ranking: Median Response Time")
@@ -1219,3 +1282,8 @@ with st.expander("Show Borough Size vs. Median Response Time by Area Type"):
     - This suggests that borough size influences response performance 
     within both structural groups rather than being explained by classification alone.
     """)
+
+
+
+
+
