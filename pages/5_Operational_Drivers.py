@@ -287,7 +287,7 @@ with st.expander("Turnout Time Stability Check"):
         max_borough_std = turnout_stats["std"].max()
 
         st.markdown(f"""
-**Turnout Stability Overview ({period_label})**
+**Turnout Time Stability Check ({period_label})**
 
 - Overall median turnout time: **{overall_turnout_median:.2f} minutes**
 - Average borough-level turnout variability (std): **{avg_borough_std:.2f} minutes**
