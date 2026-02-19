@@ -267,38 +267,41 @@ st.markdown(f"""
 # ------------------------------------------------------------
 # Turnout Time Stability Check 
 
+if has_turnout:
 
-with st.expander("Turnout Time Stability Check"):
+    # Overall turnout median (minutes)
+    overall_turnout_median = filtered_df["TurnoutMinutes"].median()
 
-    if has_turnout:
+    turnout_stats = (
+        filtered_df
+        .groupby("IncGeo_BoroughName")["TurnoutMinutes"]
+        .agg(["median", "std"])
+        .reset_index()
+    )
 
-        # Overall turnout median (minutes)
-        overall_turnout_median = filtered_df["TurnoutMinutes"].median()
+    avg_borough_std = turnout_stats["std"].mean()
+    max_borough_std = turnout_stats["std"].max()
 
-        # Borough-level variability
-        turnout_stats = (
-            filtered_df
-            .groupby("IncGeo_BoroughName")["TurnoutMinutes"]
-            .agg(["median", "std"])
-            .reset_index()
-        )
+    # Convert to seconds
+    overall_turnout_sec = overall_turnout_median * 60
+    avg_borough_std_sec = avg_borough_std * 60
+    max_borough_std_sec = max_borough_std * 60
 
-        avg_borough_std = turnout_stats["std"].mean()
-        max_borough_std = turnout_stats["std"].max()
+    with st.expander("Turnout Time Stability Check"):
 
         st.markdown(f"""
 **Turnout Time Stability Check ({period_label})**
 
-- Overall median turnout time: **{overall_turnout_median:.2f} minutes**
-- Average borough-level turnout variability (std): **{avg_borough_std:.2f} minutes**
-- Maximum borough-level turnout variability: **{max_borough_std:.2f} minutes**
+- Overall median turnout time: **{overall_turnout_median:.2f} minutes ({overall_turnout_sec:.0f} seconds)**
+- Average turnout variability across boroughs (std): **{avg_borough_std:.2f} minutes ({avg_borough_std_sec:.0f} seconds)**
+- Maximum turnout variability across boroughs: **{max_borough_std:.2f} minutes ({max_borough_std_sec:.0f} seconds)**
 
 Turnout time shows relatively low variability across boroughs compared to travel time,
 suggesting that station mobilisation performance is structurally stable.
 """)
 
-    else:
-        st.info("TurnoutTimeSeconds column not available in the dataset.")
+else:
+    st.info("TurnoutMinutes column not available in the dataset.")
 
 
 
@@ -307,28 +310,11 @@ suggesting that station mobilisation performance is structurally stable.
 
 
 with st.expander("Methodological Note"):
-    st.caption("""
+    st.markdown("""
     Median turnout and median travel time are calculated independently.
     As medians are not additive, Median(A) + Median(B) does not necessarily equal 
     Median(A + B). Therefore, their sum may differ slightly from the median attendance time.
     """)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 # ------------------------------------------------------------
 st.header("2. How does Hour of Day influence Response Time")
