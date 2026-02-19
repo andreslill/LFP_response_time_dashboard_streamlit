@@ -63,7 +63,9 @@ pop = pd.read_csv("Data/london_population_borough.csv")
 boroughs["Area_km2"] = boroughs["HECTARES"] / 100
 
 # ---------------------------------------------------------------------
-# Year and Month Filters
+# Filters
+
+# Year and Month Filters 
 
 st.sidebar.header("Filters")
 
@@ -82,7 +84,19 @@ selected_year = st.sidebar.selectbox("Select Year",options=available_years)
 # Month filter
 selected_month = st.sidebar.selectbox("Select Month",options=available_months)
 
+# Incident type Filter
+incident_options = ["All"] + sorted(df["IncidentGroup"].dropna().unique())
+
+selected_incident = st.sidebar.selectbox(
+    "Select Incident Type",
+    options=incident_options,
+    key="geo_incident"
+)
+
+# ---------------------------------------------------------------------
 # Apply Filters
+
+# Year + Month
 if selected_year == "All" and selected_month == "All":
     filtered_df = df.copy()
 
@@ -98,6 +112,13 @@ else:
         (df["MonthName"] == selected_month)
     ]
 
+# Incident Type
+if selected_incident != "All":
+    filtered_df = filtered_df[
+        filtered_df["IncidentGroup"] == selected_incident
+    ]
+
+# Empty check
 if filtered_df.empty:
     st.warning("No data available for selected filters.")
     st.stop()
@@ -113,7 +134,6 @@ else:
     month_text = selected_month
 
 # Dynamic Period Label
-
 min_year = df["Year"].min()
 max_year = df["Year"].max()
 
@@ -130,6 +150,10 @@ else:
     period_label = f"{selected_month} {selected_year}"
 
 st.caption(f"Data shown: {period_label}")
+
+
+
+
 
 # ---------------------------------------------------------------------
 # INTERACTIVE GEOGRAPHIC PERFORMANCE MAP
@@ -154,8 +178,15 @@ compliance_by_borough = (
     .reset_index(name="CompliancePercent")
 )
 
-#Normalize (clean) Borough Names for Merging (uppercase + trim)
+# Calculate incident volume per borough
+incident_volume_by_borough = (
+    filtered_df
+    .groupby("IncGeo_BoroughName")
+    .size()
+    .reset_index(name="IncidentCount")
+)
 
+#Normalize (clean) Borough Names for Merging response time (uppercase + trim)
 boroughs["NAME_clean"] = (
     boroughs["NAME"]
     .str.strip()
@@ -176,35 +207,20 @@ boroughs = boroughs.merge(
     how="left"
 )
 
-# ---------------------------------------------------
-# CLEAN NAMES (robust against casing issues)
-
-
+#Normalize (clean) Borough Names for Merging compliance rate (uppercase + trim)
 compliance_by_borough["NAME_clean"] = (
     compliance_by_borough["IncGeo_BoroughName"]
     .str.strip()
     .str.upper()
 )
 
-boroughs["NAME_clean"] = (
-    boroughs["NAME"]
-    .str.strip()
-    .str.upper()
-)
-
-# ---------------------------------------------------
-# REMOVE OLD COLUMN IF SCRIPT RERUNS prevents _x / _y duplication 
-
-
+# Remove old column if rerun (avoid _x/_y)
 boroughs = boroughs.drop(
     columns=["CompliancePercent"],
     errors="ignore"
 )
 
-# ---------------------------------------------------
-# Merge Compliance Rate
-
-
+# Merge Compliance Rate with Geodataframe
 boroughs = boroughs.merge(
     compliance_by_borough[["NAME_clean", "CompliancePercent"]],
     on="NAME_clean",
@@ -221,14 +237,36 @@ boroughs = boroughs.drop(columns=[
     "SUB_2006",
     ], errors="ignore")
 
-# Toggle
-metric_choice = st.radio(
-    "Select Geographic Metric",
-    ["Median Response Time", "Compliance Rate"],
-    horizontal=True  # optional schöner
+# Clean names in incident volume df
+incident_volume_by_borough["NAME_clean"] = (
+    incident_volume_by_borough["IncGeo_BoroughName"]
+    .str.strip()
+    .str.upper()
 )
 
-# Map
+# Remove old column if rerun (avoid _x/_y)
+boroughs = boroughs.drop(
+    columns=["IncidentCount"],
+    errors="ignore"
+)
+
+# Merge Incident Volume with Geodataframe
+boroughs = boroughs.merge(
+    incident_volume_by_borough[["NAME_clean", "IncidentCount"]],
+    on="NAME_clean",
+    how="left"
+)
+
+# ---------------------------------------------------
+# Metric Toggle
+metric_choice = st.radio(
+    "Select Geographic Metric",
+    ["Incident Volume", "Median Response Time", "Compliance Rate"],
+    horizontal=True,
+    key="geo_metric_toggle"
+)
+
+# Select Metric
 m = folium.Map(location=[51.5074, -0.1278], zoom_start=10)
 
 if metric_choice == "Median Response Time":
@@ -245,7 +283,7 @@ if metric_choice == "Median Response Time":
     tooltip_fields = ["NAME", "MedianResponse_display"]
     tooltip_aliases = ["Borough:", "Median Response Time:"]
 
-else:
+elif metric_choice == "Compliance Rate":
     value_column = "CompliancePercent"
     legend_name = "Compliance Rate (%)"
     fill_color = "YlGn"
@@ -259,6 +297,23 @@ else:
     tooltip_fields = ["NAME", "CompliancePercent_display"]
     tooltip_aliases = ["Borough:", "Compliance Rate:"]
 
+else:  # Incident Volume
+
+    value_column = "IncidentCount"
+    legend_name = "Incident Volume"
+    fill_color = "Blues"
+
+    boroughs["IncidentVolume_display"] = (
+        boroughs["IncidentCount"]
+        .astype(int)
+        .astype(str)
+    )
+
+    tooltip_fields = ["NAME", "IncidentVolume_display"]
+    tooltip_aliases = ["Borough:", "Number of Incidents:"]
+
+# ---------------------------------------------------
+# Map
 
 # Choropleth Layer
 folium.Choropleth(
@@ -298,25 +353,39 @@ folium.GeoJson(
 
 st_folium(m, use_container_width=True, height=600)
 
+# ---------------------------------------------------
 # Map Insight (direct interpretation of the map) 
-
-
-if metric_choice == "Median Response Time":
+if metric_choice == "Incident Volume":
     st.markdown(f"""
     **Map Insight**
 
+    - **Westminster** records the highest incident volume.
+    - This reinforcing the concentration of operational demand in central London.
+    - Outer boroughs show comparatively lower incident numbers
     """)
-else:
+
+elif metric_choice == "Median Response Time":
     st.markdown(f"""
     **Map Insight**
 
+    - Median response times vary across boroughs.  
+    - Longer response times are clustered in larger outer boroughs
+    - Central areas generally demonstrate faster attendance.
     """)
+elif metric_choice == "Compliance Rate":
+    st.markdown(f"""
+    **Map Insight**
+
+    - 6-minute compliance varies across boroughs.  
+    - Higher compliance rates cluster in central boroughs, 
+    - whereas several outer boroughs show lower target achievement.
+    """)
+
 
 st.markdown("")
 
+# ---------------------------------------------------
 # Expandable Response Time Ranking
-
-
 with st.expander("Show Response Time by Borough Ranking"):
 
     st.subheader("Borough Ranking: Median Response Time")
@@ -399,7 +468,7 @@ with st.expander("Show Response Time by Borough Ranking"):
 
     - Overall performance spread: **{spread:.2f} minutes**
 
-    This variation highlights meaningful geographic differences 
+    This variation reflects geographic differences 
     in median response performance across boroughs.
     """)
 
@@ -453,7 +522,7 @@ with st.expander("Show Compliance Rate by Borough Ranking"):
     - Lowest compliance: **{top_low['IncGeo_BoroughName']}** ({top_low['ComplianceRate']:.1f}%)
     - Compliance differs by up to **{gap:.1f}%** across boroughs.
 
-    The variation highlights meaningful geographic differences 
+    This variation reflects geographic differences 
     in 6-minute target compliance across boroughs.
     """)
 
@@ -954,7 +1023,22 @@ st.markdown(f"""
 - The gap of {gap_text} ({percent_difference:.1f}% difference)  highlights how borough density and travel distance directly affect response performance.
 """)
   
-# ----------------------------------------------------------
+# ---------------------------------------------------------------------
+st.markdown("---")
+# ---------------------------------------------------------------------
+
+st.markdown("""
+### Key Takeaways
+
+- Borough size is the primary structural driver, strongly associated with both longer response times and lower compliance.
+- Inner London boroughs generally outperform Outer London boroughs. However, the size effect persists within both groups,
+suggesting that borough size influences response performance independently of independently of the Inner–Outer grouping.
+- Geographic structure explains a significant portion of variation in response times across boroughs. However, performance
+differences cannot be attributed to geography alone but also to other factors (e.g. operational capacity, station allocation,
+and traffic conditions).
+""")
+
+st.markdown("<br><br><br><br><br><br><br><br><br>", unsafe_allow_html=True)
 
 with st.expander("Show Borough Size vs. Median Response Time by Area Type"):
 
@@ -1135,18 +1219,3 @@ with st.expander("Show Borough Size vs. Median Response Time by Area Type"):
     - This suggests that borough size influences response performance 
     within both structural groups rather than being explained by classification alone.
     """)
-
-# ---------------------------------------------------------------------
-st.markdown("---")
-# ---------------------------------------------------------------------
-
-st.markdown("""
-### Key Takeaways
-
-- Borough size is the primary structural driver, strongly associated with both longer response times and lower compliance.
-- Inner London boroughs generally outperform Outer London boroughs. However, the size effect persists within both groups,
-suggesting that borough size influences response performance independently of independently of the Inner–Outer grouping.
-- Geographic structure explains a significant portion of variation in response times across boroughs. However, performance
-differences cannot be attributed to geography alone but also to other factors (e.g. operational capacity, station allocation,
-and traffic conditions).
-""")
