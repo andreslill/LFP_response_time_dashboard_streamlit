@@ -558,8 +558,8 @@ st.markdown("""
 ### Implication:
 
 - Improvements in overall response performance will likely require
-  measures addressing constraints associated with travel such as
-  distance and traffic conditions, rather than further optimisation of station mobilisation.
+  measures addressing travel constraints, such as distance and traffic conditions,
+  rather than further optimisation of station mobilisation.
 """)
 
 
