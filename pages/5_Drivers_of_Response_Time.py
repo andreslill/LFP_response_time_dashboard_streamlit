@@ -549,11 +549,17 @@ with st.expander("Show delay codes included in 'Other Delay Codes'"):
 
 
 st.markdown("""
-### Key Takeaway
+### Key Takeaway:
 
 - The findings suggest that variability in response performance is
   mainly driven by constraints related to travel, while turnout
   processes remain comparatively stable across boroughs and time.
+
+### Implication:
+
+- Improvements in overall response performance will likely require
+  measures addressing constraints associated with travel such as
+  distance and traffic conditions, rather than further optimisation of station mobilisation.
 """)
 
 
