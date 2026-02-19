@@ -33,13 +33,17 @@ def style_axes(ax):
 # ---------------------------------------------------------------------
 #Title + Intro
 
-st.title("Operational Drivers")
+st.title("Operational and Structural Drivers of Response Time")
 
 st.markdown("""
-This page analyses the drivers of Response Time by decomposing it into turnout and travel time 
-**(Attendance Time = Turnout Time + Travel Time)**, and by examining the recorded causes of 6-minute target exceedance.
-The objective is to distinguish operational factors (station mobilisation) from external constraints (traffic conditions and travel distance), 
-and to assess their relative contribution to target exceedance.
+This page analyses the drivers of Response Time by decomposing it into turnout and travel components across boroughs and incident types.
+
+**Response Time = Turnout Time (Station alerted → First vehicle leaves) + Travel Time (First vehicle leaves → Arrival at scene)** 
+
+In addition, the recorded causes of 6-minute target exceedance are examined to identify recurring operational and external delay factors.
+
+The objective is to distinguish operational drivers (station mobilisation) from external constraints (e.g. traffic conditions and travel distance)
+and assess their contribution to 6-minute target exceedance.
 """)
 
 
@@ -169,10 +173,8 @@ st.header("1. What Drives Borough Differences? (Turnout vs Travel)")
 # Borough-level decomposition (Top 10 slowest boroughs)
 st.subheader("Slowest Boroughs: Response Time Decomposition")
 
-# --------------------------------------------
-# 1️⃣ Borough-level medians
-# --------------------------------------------
 
+# Borough-level medians
 borough_decomp = (
     filtered_df
     .groupby("IncGeo_BoroughName")
@@ -183,19 +185,15 @@ borough_decomp = (
     .reset_index()
 )
 
-# --------------------------------------------
-# 2️⃣ Exact total = turnout + travel
-# --------------------------------------------
 
+# Exact total = turnout + travel
 borough_decomp["TotalMedian"] = (
     borough_decomp["TurnoutMedian"] +
     borough_decomp["TravelMedian"]
 )
 
-# --------------------------------------------
-# 3️⃣ Sort EXACTLY by total descending
-# --------------------------------------------
 
+# Sort by total descending
 borough_decomp = borough_decomp.sort_values(
     "TotalMedian",
     ascending=False
@@ -204,10 +202,8 @@ borough_decomp = borough_decomp.sort_values(
 # Optional: show only slowest 10
 borough_decomp = borough_decomp.head(10)
 
-# --------------------------------------------
-# 4️⃣ Plot
-# --------------------------------------------
 
+# Plot
 fig, ax = plt.subplots(figsize=(10, 8))
 
 cb = sns.color_palette("colorblind")
@@ -234,10 +230,7 @@ ax.set_ylabel("")
 # Reverse y-axis so slowest on top
 ax.invert_yaxis()
 
-# --------------------------------------------
-# Legend 
-
-
+# ️Legend 
 ax.legend(
     loc="upper center",
     bbox_to_anchor=(0.5, 1.08),
@@ -262,8 +255,9 @@ avg_travel_share = borough_decomp["TravelShare"].mean() * 100
 st.markdown(f"""
 **Key Insight ({period_label})**
 
-- Among the slowest boroughs, **travel time accounts for approximately {avg_travel_share:.0f}%**
-  of the median response structure.
+- Overall, travel time accounts for **{travel_share_pct:.0f}%** of the median response structure.
+- Among the slowest boroughs, this share increases to approximately
+  **{avg_travel_share:.0f}%**, reinforcing the structural dominance of travel-related factors.
 - Turnout times remain comparatively stable, indicating that extended response
   times are primarily driven by factors associated with travel time such as distance and traffic.
 """)
@@ -451,6 +445,7 @@ delay_counts["DelayCode_Description"] = delay_counts["DelayCode_Description"].re
     {"No delay": "No recorded delay code"}
 )
 
+
 total_exceedances = delay_counts["IncidentCount"].sum()
 
 top_n = 5
@@ -480,6 +475,7 @@ final_delay = pd.concat([top_delay, others_row], ignore_index=True)
 final_delay = final_delay.sort_values("Percent", ascending=True)
 
 # Context
+
 exceedances = f"{len(delayed_df):,}".replace(",", ".")
 
 st.caption(
@@ -566,7 +562,13 @@ with st.expander("Show delay codes included in 'Other Delay Codes'"):
             )
 
 
+st.markdown("""
+### Key Takeaway
 
+- The findings suggest that variability in response performance is
+  mainly driven by constraints related to travel, while turnout
+  processes remain comparatively stable across boroughs and time.
+""")
 
 
 
