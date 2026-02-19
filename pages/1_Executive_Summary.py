@@ -103,7 +103,14 @@ elif selected_year == "All" and selected_month != "All":
 else:
     period_label = f"{selected_month} {selected_year}"
 
-st.caption(f"Data shown: {period_label}")
+# Dynamic Incident Label
+if selected_incident == "All":
+    incident_label = "All Incident Types"
+else:
+    incident_label = f"{selected_incident} Incidents"
+    
+
+st.caption(f"Data shown: {period_label}, {incident_label} ")
 
 # ---------------------------------------------------------------------
 # KPIs
@@ -168,10 +175,10 @@ st.pyplot(fig)
 st.markdown("**Key Insights:**")
 
 st.markdown("""
-- Across the analysed period the response performance of the London Fire Brigade remains stable,
-    with the 6-minute target achieved in approximately three out of four incidents.
-- Extreme delays exceeding 10 min affect only a small percentage of incidents,
-    yet they represent a relevant risk.
+- Across {period_label} ({incident_label.lower()}), response performance remains stable,
+  with the 6-minute target achieved in approximately three out of four incidents.
+- Extreme delays exceeding 10 min affect only a small share of incidents,
+  yet they represent a relevant risk.
 """)
 
 
