@@ -191,7 +191,7 @@ st.pyplot(fig)
 
 # Calculate shares
 incident_share = (
-    df["IncidentGroup"]
+    filtered_df["IncidentGroup"]
     .value_counts(normalize=True)
     .mul(100)
     .round(1)
