@@ -98,7 +98,7 @@ elif selected_year != "All" and selected_month == "All":
     period_label = f"{selected_year}, January–December"
 
 elif selected_year == "All" and selected_month != "All":
-    period_label = f"{selected_month}, {min_year}–{max_year}"
+    period_label = f"{selected_month} months between {min_year} and {max_year}"
 
 else:
     period_label = f"{selected_month} {selected_year}"
