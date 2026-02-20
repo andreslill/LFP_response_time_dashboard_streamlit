@@ -257,7 +257,7 @@ st.markdown(f"""
 
 - Overall, travel time accounts for **{travel_share_pct:.0f}%** of the median response structure.
 - Among the slowest boroughs, this share increases to approximately
-  **{avg_travel_share:.0f}%**, reinforcing the structural dominance of travel-related factors.
+  **{avg_travel_share:.0f}%**, showing that travel factors are the main driver.
 - Turnout times remain comparatively stable, indicating that extended response
   times are primarily driven by factors associated with travel time such as distance and traffic.
 """)
