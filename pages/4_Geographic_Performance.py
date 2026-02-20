@@ -359,20 +359,84 @@ st.markdown(f"""
 
 with st.expander("Show Inner vs Outer Borough Classification"):
 
-    classification_table = (
-        df[["NAME_clean", "AreaType"]]
-        .drop_duplicates()
-        .rename(columns={"NAME_clean": "Borough"})
-        .sort_values(["AreaType", "Borough"])
-        .reset_index(drop=True)
-    )
+    
+    import folium
 
-    # Index bei 1 starten lassen
-    classification_table.index = classification_table.index + 1
+    st.subheader("Structural Classification: Inner vs Outer London")
 
-    st.dataframe(classification_table, use_container_width=True)
+    st.markdown("""
+    This map shows the official ONS classification of London boroughs 
+    into Inner and Outer London. This structural distinction forms the 
+    basis for the comparisons performed.
+    """)
 
+    # Map T/F to readable labels
+    boroughs["AreaType"] = boroughs["ONS_INNER"].map({
+        "T": "Inner London",
+        "F": "Outer London"
+    })
 
+    # Create base map
+    m = folium.Map(
+    location=[51.5074, -0.1278],
+    zoom_start=10,
+    min_zoom=10,
+    max_zoom=10,
+    zoom_control=False,      # removes zoom buttons
+    scrollWheelZoom=False,   # disables mouse wheel zoom
+    dragging=False,          # disables map dragging
+    doubleClickZoom=False,   # disables double-click zoom
+    touchZoom=False          # disables touch zoom (mobile)
+)
+
+    # Color mapping
+    color_dict = {
+        "Inner London": "#1f77b4",  # blue
+        "Outer London": "#2ca02c"   # green
+    }
+
+    def style_function(feature):
+        area = feature["properties"]["AreaType"]
+        return {
+            "fillColor": color_dict.get(area, "gray"),
+            "color": "black",
+            "weight": 0.8,
+            "fillOpacity": 0.7
+        }
+
+    # Add GeoJSON layer
+    folium.GeoJson(
+        boroughs,
+        style_function=style_function,
+        tooltip=folium.GeoJsonTooltip(
+            fields=["NAME", "AreaType"],
+            aliases=["Borough:", "Classification:"]
+        )
+    ).add_to(m)
+
+    # Add custom legend
+    legend_html = """
+    <div style="
+    position: fixed; 
+    bottom: 50px; left: 50px; 
+    width: 180px; 
+    background-color: white; 
+    border:2px solid grey; 
+    z-index:9999; 
+    font-size:14px;
+    padding: 10px;
+    ">
+    <b>London Classification</b><br>
+    <i style="background:#1f77b4;width:12px;height:12px;display:inline-block;"></i> Inner London<br>
+    <i style="background:#2ca02c;width:12px;height:12px;display:inline-block;"></i> Outer London
+    </div>
+    """
+
+    m.get_root().html.add_child(folium.Element(legend_html))
+
+    # Render
+    st.components.v1.html(m._repr_html_(), height=600)
+    
 # ---------------------------------------------------------------------
 st.markdown("---")
 # ---------------------------------------------------------------------
@@ -496,9 +560,11 @@ m = folium.Map(
     zoom_start=10,
     min_zoom=10,
     max_zoom=10,
-    zoom_control=False,
-    scrollWheelZoom=False,
-    dragging=False
+    zoom_control=False,      # removes zoom buttons
+    scrollWheelZoom=False,   # disables mouse wheel zoom
+    dragging=False,          # disables map dragging
+    doubleClickZoom=False,   # disables double-click zoom
+    touchZoom=False          # disables touch zoom (mobile
 )
 
 # Select Metric
