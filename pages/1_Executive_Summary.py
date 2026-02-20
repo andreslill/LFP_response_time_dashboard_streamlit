@@ -184,7 +184,7 @@ ax.axvline(median, color="black", linewidth=2, label=f"Median ({median:.2f})")
 ax.axvline(mean, color="blue", linestyle="--", label=f"Mean ({mean:.2f})")
 ax.axvline(p90, color="purple", linestyle=":", label=f"P90 ({p90:.2f})")
 
-ax.set_xlabel("Attendance Time (minutes)")
+ax.set_xlabel("Response Time (minutes)")
 ax.set_ylabel("Incidents (%)")  # ← Y-Achse angepasst
 
 style_axes(ax)
