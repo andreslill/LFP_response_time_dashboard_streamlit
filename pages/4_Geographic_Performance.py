@@ -159,7 +159,7 @@ st.caption(f"Data shown: {period_label}, {incident_label} ")
 
 # ---------------------------------------------------------------------
 
-st.header("1. How Does Response Performance Vary Across Boroughs?")
+st.header("1. Do Response Times Differ Between Inner and Outer London?")
 
 # ---------------------------------------------------------------------
 # Prepare dataset for analysis
@@ -378,7 +378,7 @@ st.markdown("---")
 # ---------------------------------------------------------------------
 
 
-st.header("2. How Do Demand and Response Performance Vary Across London Boroughs?")
+st.header("2. How Are Demand and Response Performance Distributed Across Boroughs?")
 
 
 # INTERACTIVE GEOGRAPHIC PERFORMANCE MAP
@@ -824,7 +824,7 @@ st.header("3. What Drives Geographic Differences in Response Time?")
 # Borough Size vs. Median Response Time by Area Type
 # Investigates structural relationship between geographic size and performance
 
-st.markdown("### Impact on Response Time")
+st.markdown("### 3.1 Impact on Response Time")
 st.markdown("") 
 st.subheader("Borough Size vs. Median Response Time by Area Type")
 
@@ -1092,7 +1092,7 @@ st.markdown(f"""
 # ---------------------------------------------------------------------
 st.markdown("---")
 # ---------------------------------------------------------------------
-st.markdown("### Impact on Target Compliance")
+st.markdown("### 3.2 Impact on Target Compliance")
 st.markdown("") 
 st.subheader("Borough Size vs. 6-Minute Compliance Rate")
 
