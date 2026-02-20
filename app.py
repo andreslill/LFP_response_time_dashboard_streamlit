@@ -6,7 +6,9 @@ st.set_page_config(
 st.title("🚒 London Fire Brigade Incident & Response Time Analysis Dashboard")
 
 st.markdown("""
-This dashboard analyses London Fire Brigade incident and mobilisation data (2021–2025).
+This dashboard analyzes operational response performance of the London Fire Brigade using incident and mobilisation data from 2021 to 2025.
+The goal is to better understand how reliably response targets are met and how response performance how performance varies over time and across London.
+
 
 Use the sidebar to navigate through the analytical sections:
 - Executive Summary
