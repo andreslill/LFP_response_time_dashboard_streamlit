@@ -204,7 +204,7 @@ borough_decomp = borough_decomp.head(10)
 
 
 # Plot
-fig, ax = plt.subplots(figsize=(7.5, 6))
+fig, ax = plt.subplots(figsize=(6, 6))
 
 cb = sns.color_palette("colorblind")
 turnout_color = cb[2]
