@@ -364,12 +364,11 @@ with st.expander("Show Inner vs Outer Borough Classification"):
 
     st.subheader("Structural Classification: Inner vs Outer London")
 
-    st.markdown("""
-    This map shows the official ONS classification of London boroughs 
-    into Inner and Outer London. This structural distinction forms the 
-    basis for the comparisons performed.
+    st.markdown
+    ("""
+    London’s Inner and Outer boroughs, according to official ONS classification.
     """)
-
+    
     # Map T/F to readable labels
     boroughs["AreaType"] = boroughs["ONS_INNER"].map({
         "T": "Inner London",
