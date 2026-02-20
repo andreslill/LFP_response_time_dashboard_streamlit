@@ -364,9 +364,7 @@ with st.expander("Show Inner vs Outer Borough Classification"):
 
     st.subheader("Structural Classification: Inner vs Outer London")
 
-    st.markdown
-    ("""
-    London’s Inner and Outer boroughs, according to official ONS classification.
+    st.markdown("""London’s Inner and Outer boroughs, according to official ONS classification.
     """)
     
     # Map T/F to readable labels
