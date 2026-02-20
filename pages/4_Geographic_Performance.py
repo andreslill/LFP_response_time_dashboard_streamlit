@@ -362,7 +362,7 @@ with st.expander("Show Inner vs Outer Borough Classification"):
     
     import folium
 
-    st.subheader("Structural Classification: Inner vs Outer London")
+    st.subheader("Classification: Inner vs Outer London")
 
     st.markdown("""London’s Inner and Outer boroughs, according to official ONS classification.
     """)
