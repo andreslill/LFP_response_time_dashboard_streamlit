@@ -130,6 +130,10 @@ col3.metric("90th Percentile Response Time (min)", f"{p90_response:.2f} min")
 col4.metric(">10 min Delays (%)", f"{extreme_delay_rate:.1f}%")
 
 # ---------------------------------------------------------------------
+# Calculate 6-minute compliance rate
+compliance_rate = (filtered_df["FirstPump_Within_6min"].mean() * 100)
+
+# ---------------------------------------------------------------------
 # Stacked Barplot
 
 st.subheader("Distribution of Response Times")
@@ -535,7 +539,7 @@ st.markdown("---")
 # Key Takeaways
 
 
-st.markdown("""
+st.markdown(f"""
 ### Key Takeaways
 
 - Response performance is stable across months and hours, with minimal variation in response performance.
