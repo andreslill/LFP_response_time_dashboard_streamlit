@@ -232,26 +232,26 @@ borough_spatial_extent = borough_spatial_extent.merge(
 )
 
 # Prepare borough-level dataset for inner-outer London comparison
-df = borough_spatial_extent.copy()
+borough_df = borough_spatial_extent.copy()
 
 
 # Merge official Inner / Outer London classification (ONS)
-df = df.merge(
+borough_df = borough_df.merge(
     boroughs[["NAME_clean", "ONS_INNER"]],
     on="NAME_clean",
     how="left"
 )
 
 # Map ONS indicator to Inner and Outer London 
-df["AreaType"] = df["ONS_INNER"].map({
+borough_df["AreaType"] = borough_df["ONS_INNER"].map({
     "T": "Inner London",
     "F": "Outer London"
 })
 
 
 # Split dataset by Inner and Outer London 
-inner_df = df[df["AreaType"] == "Inner London"]
-outer_df = df[df["AreaType"] == "Outer London"]
+inner_df = borough_df[borough_df["AreaType"] == "Inner London"]
+outer_df = borough_df[borough_df["AreaType"] == "Outer London"]
 
 
 # ---------------------------------------------------------------------
@@ -664,7 +664,7 @@ elif metric_choice == "Response within 6 min (%)":
     st.markdown(f"""
     **Map Insight**
 
-    - Response within 6-minutes rate varies across boroughs.  
+    - Response within 6 minutes rate varies across boroughs.  
     - Higher compliance rates cluster in central boroughs, 
     - whereas several outer boroughs show lower target achievement.
     """)
@@ -761,7 +761,7 @@ with st.expander("Show Response Time by Borough Ranking"):
         ax=ax
     )
 
-    # 6-Minuten-Reference Line
+    # 6 Minuten-Reference Line
     ax.axvline(
         6,
         color="black",
@@ -774,7 +774,7 @@ with st.expander("Show Response Time by Borough Ranking"):
     ax.text(
         5.95,                                 
         -0.8,                                  
-        "6-minute target",
+        "6 minute target",
         fontsize=10,
         ha="right"
     )
@@ -860,7 +860,7 @@ with st.expander("Show Response within 6 min Rate by Borough Ranking"):
     - Compliance differs by up to **{gap:.1f}%** across boroughs.
 
     This variation reflects geographic differences 
-    in 6-minute target compliance across boroughs.
+    in 6 minute target compliance across boroughs.
     """)
 
 # ---------------------------------------------------------------------
@@ -882,8 +882,8 @@ st.subheader("Borough Size vs. Median Response Time by Area Type")
 
 # Linear Regression (Borough Area vs Median Response Time
 slope, intercept, r_value, p_value, std_err = linregress(
-    df["Area_km2"],
-    df["MedianResponseMinutes"]
+    borough_df["Area_km2"],
+    borough_df["MedianResponseMinutes"]
 )
 
 # Statistical calculations
@@ -893,8 +893,8 @@ r_squared = r_value ** 2
 r_squared_percent = r_squared * 100
 
 x_range = np.linspace(
-    df["Area_km2"].min(),
-    df["Area_km2"].max(),
+    borough_df["Area_km2"].min(),
+    borough_df["Area_km2"].max(),
     100
 )
 
@@ -1145,9 +1145,9 @@ st.markdown("---")
 # ---------------------------------------------------------------------
 st.markdown("### 3.2 Impact on Response within 6-min Target")
 st.markdown("") 
-st.subheader("Borough Size vs. 6-Minute Compliance Rate")
+st.subheader("Borough Size vs. Response within 6 Minute (%)")
 
-df_comp = borough_spatial_extent.copy()
+df_comp = borough_df
 
 # Regression
 slope_c, intercept_c, r_c, p_c, std_err_c = linregress(
@@ -1261,10 +1261,10 @@ st.markdown(f"""
 
 **Key Insight:**
 
-- The relationship between borough size and 6-minute compliance is **{strength_c} and {direction_c}**
+- The relationship between borough size and 6 minute compliance is **{strength_c} and {direction_c}**
 (r = {r_c:.2f}, R² = {r2_c:.2f}).
 - This indicates that the impact of borough size is not limited to response time but is also associated with lower target compliance.
-- The effect is **{significance_c}** (p {format_p(p_c)}), indicating that larger boroughs are less likely to meet the 6-minutes response target.
+- The effect is **{significance_c}** (p {format_p(p_c)}), indicating that larger boroughs are less likely to meet the 6 minute response target.
 """)
 
 # ---------------------------------------------------------------------
@@ -1310,13 +1310,13 @@ with st.expander("Show Borough Level Performance Overview"):
 
     st.subheader("Borough Size vs. Median Response Time")
 
-    df = borough_spatial_extent.copy()
+    bubble_df = borough_spatial_extent.copy()
 
     # ----------------------------------------------------------
     # Linear regression model (Area_km2 as predictor)
     slope, intercept, r_value, p_value, std_err = linregress(
-        df["Area_km2"],
-        df["MedianResponseMinutes"]
+        bubble_df["Area_km2"],
+        bubble_df["MedianResponseMinutes"]
     )
 
     # Model statistics
@@ -1325,8 +1325,8 @@ with st.expander("Show Borough Level Performance Overview"):
     r_squared = r_value ** 2
 
     x_range = np.linspace(
-        df["Area_km2"].min(),
-        df["Area_km2"].max(),
+        bubble_df["Area_km2"].min(),
+        bubble_df["Area_km2"].max(),
         100
     )
 
@@ -1339,8 +1339,8 @@ with st.expander("Show Borough Level Performance Overview"):
     max_size = 60
 
     size_scaled = (
-        (df["IncidentCount"] - df["IncidentCount"].min()) /
-        (df["IncidentCount"].max() - df["IncidentCount"].min())
+        (bubble_df["IncidentCount"] - bubble_df["IncidentCount"].min()) /
+        (bubble_df["IncidentCount"].max() - bubble_df["IncidentCount"].min())
     )
 
     size_scaled = size_scaled * (max_size - min_size) + min_size
@@ -1352,12 +1352,12 @@ with st.expander("Show Borough Level Performance Overview"):
 
     # Main bubble layer
     fig.add_trace(go.Scatter(
-        x=df["Area_km2"], 
-        y=df["MedianResponseMinutes"],
+        x=bubble_df["Area_km2"], 
+        y=bubble_df["MedianResponseMinutes"],
         mode="markers",
         marker=dict(
             size=size_scaled,
-            color=df["ComplianceRate"],
+            color=bubble_df["ComplianceRate"],
             colorscale="RdYlGn",
             reversescale=False,
             line=dict(width=1.2, color="black"),
@@ -1373,11 +1373,11 @@ with st.expander("Show Borough Level Performance Overview"):
             "Incident Count: %{customdata[0]:,.0f}<br>" +
             "Area: %{customdata[1]:.1f} km²" +
             "<extra></extra>",
-        text=df["IncGeo_BoroughName"],
+        text=bubble_df["IncGeo_BoroughName"],
         customdata=np.stack(
         (
-            df["IncidentCount"],
-            df["Area_km2"]
+            bubble_df["IncidentCount"],
+            bubble_df["Area_km2"]
         ),
         axis=-1
     ),
