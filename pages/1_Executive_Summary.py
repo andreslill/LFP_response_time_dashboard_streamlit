@@ -34,6 +34,13 @@ def style_axes(ax):
 st.title("Executive Summary")
 st.markdown("London Fire Brigade Response Performance (2021–2025)")
 
+st.markdown("""
+*Note: In this dashboard, "Response Time" refers to First Pump Attendance Time
+(time from call to arrival of the first pump).*
+""")
+# ---------------------------------------------------------------------
+# Load Data
+
 df = load_data()
 
 # ---------------------------------------------------------------------
@@ -153,7 +160,7 @@ col5.metric(">10 min Delays (%)", f"{extreme_delay_rate:.1f}%")
 # ---------------------------------------------------------------------
 # Distribution Plot
 
-st.subheader("Distribution of First Pump Attendance Time")
+st.subheader("Distribution of Response Time")
 
 response_minutes = filtered_df["FirstPumpArriving_AttendanceTime"] / 60
 
@@ -165,8 +172,9 @@ fig, ax = plt.subplots(figsize=(FIG_WIDTH, FIG_HEIGHT_MEDIUM))
 
 sns.histplot(
     response_minutes,
-    bins=60,
-    kde=True,
+    bins=25,
+    kde=False,
+    stat="percent",
     ax=ax
 )
 
@@ -176,9 +184,8 @@ ax.axvline(median, color="black", linewidth=2, label=f"Median ({median:.2f})")
 ax.axvline(mean, color="blue", linestyle="--", label=f"Mean ({mean:.2f})")
 ax.axvline(p90, color="purple", linestyle=":", label=f"P90 ({p90:.2f})")
 
-
 ax.set_xlabel("Attendance Time (minutes)")
-ax.set_ylabel("Frequency")
+ax.set_ylabel("Share of Incidents (%)")  # ← Y-Achse angepasst
 
 style_axes(ax)
 
@@ -197,6 +204,8 @@ st.markdown("**Key Insights:**")
 st.markdown(f"""
 - Across {period_label} ({incident_label.lower()}), response performance remains stable,
   with the 6-minute target achieved in approximately three out of four incidents.
+- The right-skewed distribution indicates that performance variability is
+ mainly driven by a smaller share of longer incidents.
 - Extreme delays exceeding 10 min affect only a small share of incidents,
   yet they represent a relevant risk.
 """)
