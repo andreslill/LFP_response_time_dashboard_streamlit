@@ -1232,8 +1232,8 @@ with st.expander("Show Regression Summary (Statistical Details)"):
     col1, col2 = st.columns(2)
 
     with col1:
-        st.metric("Correlation (r)", f"{r_c:.3f}")
-        st.metric("R²", f"{r2_c:.3f}")
+        st.metric("Correlation (r)", f"{r_c:.2f}")
+        st.metric("R²", f"{r2_c:.2f}")
         st.metric("p-value", f"{format_p(p_c)}")
         
     with col2:
@@ -1409,29 +1409,6 @@ with st.expander("Show Borough Level Performance Overview"):
     fig.update_xaxes(showgrid=False)
     fig.update_yaxes(showgrid=False)
 
-
-    # Add annotation
-
-    fig.add_annotation(
-        x=0.98,
-        y=0.02,
-        xref="paper",
-        yref="paper",
-        text=(
-            f"y = {slope:.4f}x + {intercept:.2f}<br>"
-            f"r = {r:.2f} | R² = {r_squared:.2f}<br>"
-            f"p = {p:.4f}"
-        ),
-        showarrow=False,
-        align="center",
-        font=dict(size=14),
-        bgcolor="rgba(255,255,255,0.95)",
-        bordercolor="black",
-        borderwidth=1,
-        borderpad=8
-    )
-
-
     # Custom size legend (manual dummy traces)
 
     fig.add_trace(go.Scatter(
@@ -1467,7 +1444,7 @@ with st.expander("Show Borough Level Performance Overview"):
 
 
     st.plotly_chart(fig)
-
+    
     # ----------------------------------------------------------
     # Dynamic Statistics 
 
@@ -1487,6 +1464,23 @@ with st.expander("Show Borough Level Performance Overview"):
         significance = "statistically significant"
     else:
         significance = "not statistically significant"
+
+    # ----------------------------------------------------------
+    # Regression Summary Expander
+
+    with st.expander("Show Regression Summary (Statistical Details)"):
+
+        col1, col2 = st.columns(2)
+
+        with col1:
+            st.metric("Correlation (r)", f"{r:.2f}")
+            st.metric("R²", f"{r_squared:.2f}")
+            st.metric("p-value", format_p(p))
+
+        with col2:
+            st.metric("Statistically Significant", "Yes" if p < 0.05 else "No")
+            st.metric("Effect Strength", strength.capitalize())
+            st.metric("Effect Direction", direction.capitalize())
 
     # ----------------------------------------------------------
     # Dynamic Markdown
