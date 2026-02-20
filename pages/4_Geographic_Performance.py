@@ -1195,7 +1195,7 @@ fig_comp.add_trace(go.Scatter(
         colorscale="YlGn",
         line=dict(width=1, color="black"),
         opacity=0.8,
-        colorbar=dict(title="Compliance Rate (%)")
+        colorbar=dict(title="Response within 6 min (%)")
     ),
     text=df_comp["IncGeo_BoroughName"],
     hovertemplate=
@@ -1264,7 +1264,7 @@ st.markdown(f"""
 - The relationship between borough size and 6-minute compliance is **{strength_c} and {direction_c}**
 (r = {r_c:.2f}, R² = {r2_c:.2f}).
 - This indicates that the impact of borough size is not limited to response time but is also associated with lower target compliance.
-- The effect is **{significance_c}** (p {format_p(p)}), indicating that larger boroughs are less likely to meet the 6-minutes response target.
+- The effect is **{significance_c}** (p {format_p(p_c)}), indicating that larger boroughs are less likely to meet the 6-minutes response target.
 """)
 
 # ---------------------------------------------------------------------
