@@ -13,9 +13,8 @@ import folium
 from streamlit_folium import st_folium
 import statsmodels.api as sm
 
-
 # ---------------------------------------------------------------------
-# theme
+# Theme
 
 st.set_page_config(layout="wide")
 sns.set_theme(style="white", context="notebook")
@@ -199,9 +198,12 @@ borough_spatial_extent = borough_spatial_extent.merge(
     how="left"
 )
 
+# Definition:
+# "Response within 6 min (%)" shown in the dashboard
+# corresponds to the internal variable "ComplianceRate"
+# (share of incidents with first pump attendance ≤ 6 minutes).
 
 # Add compliance rate per borough
-
 borough_compliance = (
     filtered_df
     .assign(Within6 = filtered_df["FirstPumpArriving_AttendanceTime"] <= 360)
@@ -295,7 +297,6 @@ inner_outer_summary = inner_outer_summary.sort_values("AreaType")
 
 
 # Plot 
-
 fig, ax = plt.subplots(figsize=(FIG_WIDTH, FIG_HEIGHT_SMALL))
 
 # Colorblind-safe palette (2 colors)
@@ -364,9 +365,10 @@ with st.expander("Show Inner vs Outer Borough Classification"):
 
     st.subheader("Classification: Inner vs Outer London")
 
-    st.markdown("""London’s Inner and Outer boroughs, according to official ONS classification.
+    st.markdown("""
+    London’s Inner and Outer boroughs, according to official ONS classification.
     """)
-    
+
     # Map T/F to readable labels
     boroughs["AreaType"] = boroughs["ONS_INNER"].map({
         "T": "Inner London",
@@ -455,15 +457,6 @@ median_response_by_borough = (
 )
 
 
-# Calculate compliance rate per borough
-compliance_by_borough = (
-    filtered_df
-    .groupby("IncGeo_BoroughName")["FirstPump_Within_6min"]
-    .mean()
-    .mul(100)
-    .reset_index(name="CompliancePercent")
-)
-
 # Calculate incident volume per borough
 incident_volume_by_borough = (
     filtered_df
@@ -494,27 +487,27 @@ boroughs = boroughs.merge(
 )
 
 #Normalize (clean) Borough Names for Merging compliance rate (uppercase + trim)
-compliance_by_borough["NAME_clean"] = (
-    compliance_by_borough["IncGeo_BoroughName"]
+borough_compliance["NAME_clean"] = (
+    borough_compliance["IncGeo_BoroughName"]
     .str.strip()
     .str.upper()
 )
 
 # Remove old column if rerun (avoid _x/_y)
 boroughs = boroughs.drop(
-    columns=["CompliancePercent"],
+    columns=["ComplianceRate"],
     errors="ignore"
 )
 
 # Merge Compliance Rate with Geodataframe
 boroughs = boroughs.merge(
-    compliance_by_borough[["NAME_clean", "CompliancePercent"]],
+    borough_compliance[["NAME_clean", "ComplianceRate"]],
     on="NAME_clean",
     how="left"
 )
 
 # Round Values for Tooltip Display
-boroughs["CompliancePercent"] = boroughs["CompliancePercent"].round(1)
+boroughs["ComplianceRate"] = boroughs["ComplianceRate"].round(1)
 
 # Delete redundant and empty Columns
 boroughs = boroughs.drop(columns=[
@@ -546,7 +539,7 @@ boroughs = boroughs.merge(
 # Metric Toggle
 metric_choice = st.radio(
     "Select Geographic Metric",
-    ["Incident Volume", "Median Response Time", "Compliance Rate"],
+    ["Incident Volume", "Median Response Time", "Response within 6 min (%)"],
     horizontal=True,
     key="geo_metric_toggle"
 )
@@ -579,18 +572,18 @@ if metric_choice == "Median Response Time":
     tooltip_fields = ["NAME", "MedianResponse_display"]
     tooltip_aliases = ["Borough:", "Median Response Time:"]
 
-elif metric_choice == "Compliance Rate":
-    value_column = "CompliancePercent"
-    legend_name = "Compliance Rate (%)"
+elif metric_choice == "Response within 6 min (%)":
+    value_column = "ComplianceRate"
+    legend_name = "Response within 6 min (%)"
     fill_color = "YlGn"
 
-    boroughs["CompliancePercent_display"] = (
-        boroughs["CompliancePercent"]
+    boroughs["ComplianceRate_display"] = (
+        boroughs["ComplianceRate"]
         .round(1)
         .astype(str) + "%"
     )
     
-    tooltip_fields = ["NAME", "CompliancePercent_display"]
+    tooltip_fields = ["NAME", "ComplianceRate_display"]
     tooltip_aliases = ["Borough:", "Compliance Rate:"]
 
 else:  # Incident Volume
@@ -667,11 +660,11 @@ elif metric_choice == "Median Response Time":
     - Longer response times are clustered in larger outer boroughs
     - Central areas generally demonstrate faster attendance.
     """)
-elif metric_choice == "Compliance Rate":
+elif metric_choice == "Response within 6 min (%)":
     st.markdown(f"""
     **Map Insight**
 
-    - 6-minute compliance varies across boroughs.  
+    - Response within 6-minutes rate varies across boroughs.  
     - Higher compliance rates cluster in central boroughs, 
     - whereas several outer boroughs show lower target achievement.
     """)
@@ -681,7 +674,7 @@ st.markdown("")
 
 
 # ---------------------------------------------------------------------
-# Expandable Compliance Rate Ranking
+# Expandable Incident Volume Ranking
 
 with st.expander("Incident Volume by Borough Ranking"):
 
@@ -824,34 +817,29 @@ with st.expander("Show Response Time by Borough Ranking"):
 # ---------------------------------------------------------------------
 # Expandable Compliance Rate Ranking
 
-with st.expander("Show Compliance Rate by Borough Ranking"):
-    
-    st.subheader(" Borough Ranking: Compliance Rate (Response Time ≤ 6 minutes)")
+with st.expander("Show Response within 6 min Rate by Borough Ranking"):
 
-    borough_compliance = (
-        filtered_df
-        .assign(Within6 = filtered_df["FirstPumpArriving_AttendanceTime"] <= 360)
-        .groupby("IncGeo_BoroughName")["Within6"]
-        .mean()
-        .mul(100)
-        .reset_index(name="ComplianceRate")
-        .sort_values("ComplianceRate", ascending=False)  # highest compliance on top
+    st.subheader("Borough Ranking: Response within 6 min (%)")
+
+    ranking_df = borough_compliance.sort_values(
+        "ComplianceRate",
+        ascending=False
     )
 
     fig, ax = plt.subplots(figsize=(10, 12))
 
-    palette = sns.color_palette("RdYlGn_r", len(borough_compliance))
+    palette = sns.color_palette("RdYlGn_r", len(ranking_df))
 
     sns.barplot(
-        data=borough_compliance,
+        data=ranking_df,
         y="IncGeo_BoroughName",
         x="ComplianceRate",
-        order=borough_compliance["IncGeo_BoroughName"],  # force correct order
+        order=ranking_df["IncGeo_BoroughName"],
         palette=palette,
         ax=ax
     )
 
-    ax.set_xlabel("Compliance Rate (%)")
+    ax.set_xlabel("Response within 6 min (%)")
     ax.set_ylabel("")
 
     sns.despine()
@@ -1144,7 +1132,7 @@ st.markdown(f"""
 - Borough size is **strongly associated** with median response time 
   **(r = {r:.2f}, R² = {r_squared:.2f})**, explaining approximately 
   **{r_squared_percent:.0f}%** of the observed variation 
-  **(p {format_p(p)}; {significance_text})**; {significance_text}).
+  **(p {format_p(p)}; {significance_text})**.
 - The positive relationship remains observable within both groups,
   Inner London **(r = {r_inner_val:.2f}; {significance_inner})** and 
   Outer London **(r = {r_outer_val:.2f}; {significance_outer})**.
@@ -1155,7 +1143,7 @@ st.markdown(f"""
 # ---------------------------------------------------------------------
 st.markdown("---")
 # ---------------------------------------------------------------------
-st.markdown("### 3.2 Impact on Target Compliance")
+st.markdown("### 3.2 Impact on Response within 6-min Target")
 st.markdown("") 
 st.subheader("Borough Size vs. 6-Minute Compliance Rate")
 
@@ -1212,7 +1200,7 @@ fig_comp.add_trace(go.Scatter(
     text=df_comp["IncGeo_BoroughName"],
     hovertemplate=
         "<b>%{text}</b><br><br>" +
-        "Compliance: %{y:.1f}%<br>" +
+        "Response within 6 min: %{y:.1f}%<br>" +
         "Area: %{x:.1f} km²<br>" +
         "<extra></extra>",
     showlegend=False
@@ -1230,7 +1218,7 @@ fig_comp.add_trace(go.Scatter(
 fig_comp.update_layout(
     height=600,
     xaxis_title="Borough Area (km²)",
-    yaxis_title="Compliance Rate (%)",
+    yaxis_title="Response within 6-min Rate (%)",
     template="simple_white"
 )
 
@@ -1246,7 +1234,7 @@ with st.expander("Show Regression Summary (Statistical Details)"):
     with col1:
         st.metric("Correlation (r)", f"{r_c:.3f}")
         st.metric("R²", f"{r2_c:.3f}")
-        st.metric("p-value", f"{format_p(p)}")
+        st.metric("p-value", f"{format_p(p_c)}")
         
     with col2:
         st.metric("Statistically Significant", "Yes" if p_c < 0.05 else "No" )
@@ -1374,14 +1362,14 @@ with st.expander("Show Borough Level Performance Overview"):
             reversescale=False,
             line=dict(width=1.2, color="black"),
             colorbar=dict(
-                title="Compliance Rate (%)"
+                title="Response within 6 min (%)"
             ),
             opacity=0.75
         ),
         hovertemplate=
             "<b>%{text}</b><br><br>" +
             "Median Response: %{y:.2f} min<br>" +
-            "Compliance: %{marker.color:.1f}%<br>" +
+            "Response within 6 min: %{marker.color:.1f}%<br>" +
             "Incident Count: %{customdata[0]:,.0f}<br>" +
             "Area: %{customdata[1]:.1f} km²" +
             "<extra></extra>",
