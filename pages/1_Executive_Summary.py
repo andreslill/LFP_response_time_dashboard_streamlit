@@ -213,6 +213,6 @@ st.markdown(f"""
 
 
 
-
+st.write(df.columns)
 
 
